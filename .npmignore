@@ -1,3 +1,6 @@
+# include the .d.ts files
+!*.d.ts
+
 #test
 test
 
