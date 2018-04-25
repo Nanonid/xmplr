@@ -1,0 +1,27 @@
+{
+  "name": "xmplr",
+  "version": "1.0.0",
+  "description": "Statistical object generator.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "https://github.com/Nanonid/xmplr.git",
+  "author": "Nanonid <eric.lindahl.tab@gmail.com>",
+  "license": "LGPL-3.0-or-later",
+  "private": false,
+  "dependencies": {
+    "lib-r-math.js": "^1.0.82",
+    "@types/node": "^9.6.6",
+    "typescript": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/tape": "^4.2.32",
+    "tape": "^4.9.0",
+    "ts-node": "^6.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "ts": "./node_modules/.bin/ts-node",
+    "run": "nodemon --exec ./node_modules/.bin/ts-node -- ./lib/index.ts",
+    "test": "ts-node node_modules/tape/bin/tape test/*.ts"
+  }
+}

@@ -1,0 +1,11 @@
+#test
+test
+
+#typescript
+lib
+
+#build tools
+.travis.yml
+.jenkins.yml
+.codeclimate.yml
+.vscode
