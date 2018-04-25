@@ -3,6 +3,11 @@
 
 This library creates "Exemplars" or statistical object generator for defining and creating an arbitrary object where each attribute conforms to a statistical distribution.
 
+### Note - This library creates random fictitious people
+
+All of the people created are randomly generated and fictitious. Any resemblance to a real person is coincidental (obviously).
+
+At some point, this project will add address, social security numbers, credit cards, etc to facilitate testing.
 
 ## Example - generate a single customer at a time (typescript)
 
@@ -20,6 +25,19 @@ Generate customers as an xmplr Object model that will have a random but reasonab
     let xPerson = new xObject(personModel)
     let person = xPerson.next()
     console.log(person)
+```
+### Generates a person
+```javascript
+{ 
+    first: 'Pamala',
+    last: 'Berlin',
+    age: 21,
+    location: { 
+      Zip: '78216', 
+      Lat: '29.537264', 
+      Lon: '-98.487882'
+    } 
+}
 ```
 
 ## Example - an arrival rate of customers at a time
