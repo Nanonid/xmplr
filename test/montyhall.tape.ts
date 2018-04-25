@@ -1,4 +1,4 @@
-import {xList,xIndex,xNormRand,xInterval} from "../lib"
+import { xList, xIndex, xNormRand, xInterval } from "../lib"
 import * as test from "tape"
 
 /**
@@ -18,22 +18,22 @@ test("Monty Hall Problem", (t) => {
     // demonstrate the three possible car locations
     // as individual games
     let doors = [
-        new xList(["car","goat1","goat2"]),
-        new xList(["goat1","car","goat2"]),
-        new xList(["goat1","goat2","car"]) ]
+        new xList(["car", "goat1", "goat2"]),
+        new xList(["goat1", "car", "goat2"]),
+        new xList(["goat1", "goat2", "car"])]
 
     let games = [
         new xIndex(doors[0]),
         new xIndex(doors[1]),
-        new xIndex(doors[2]) ]
+        new xIndex(doors[2])]
 
-    let doorChoice = new xInterval(0,2)
+    let doorChoice = new xInterval(0, 3)
 
     let chooseGame = () => Math.trunc(doorChoice.next())
 
-    let chooseGoatDoor = (game:xIndex,choice:string) => {
+    let chooseGoatDoor = (game: xIndex, choice: string) => {
         let goatChoice = game.next()
-        while( goatChoice == choice || goatChoice == "car"){
+        while (goatChoice == choice || goatChoice == "car") {
             goatChoice = game.next()
         }
         return goatChoice
@@ -41,20 +41,22 @@ test("Monty Hall Problem", (t) => {
 
     // remove chosen doors from all the doors
     // since there is only 3 in this game, only 1 other door
-    let chooseRemainingDoor = (game:xIndex,choices:string[]) => {
-        let remaining = game.list.states.filter( (door) => 
+    let chooseRemainingDoor = (game: xIndex, choices: string[]) => {
+        let remaining = game.list.states.filter((door) =>
             choices.indexOf(door) < 0
         )
         return remaining[0]
     }
 
-    let wins = [0,0]
+    let wins = [0, 0]
     let rounds = 200000
+    let gameChosen = [0, 0, 0]
 
-    for( let i = 0; i < rounds; i++ ){
+    for (let i = 0; i < rounds; i++) {
         // choose one of the 3 possible car placements
         let carPlacement = chooseGame()
         let game = games[carPlacement]
+        gameChosen[carPlacement] += 1
 
         // player chooses a random door
         // maybe a car!
@@ -62,25 +64,29 @@ test("Monty Hall Problem", (t) => {
 
         // game show hosts chooses a door that is a goat and not
         // our current choice
-        let goatDoor = chooseGoatDoor(game,firstChoice)
+        let goatDoor = chooseGoatDoor(game, firstChoice)
 
         // choose the other door, which is all the doors with the first two 
         // filtered out, one of which is now *known* to be a goat!
-        let changedChoice = chooseRemainingDoor(game,[goatDoor,firstChoice])
+        let changedChoice = chooseRemainingDoor(game, [goatDoor, firstChoice])
 
         // original choice wins!
-        if( firstChoice == "car" ){
+        if (firstChoice == "car") {
             wins[0] = wins[0] + 1
         }
         // changing choice wins!
-        if( changedChoice == "car" ){
+        if (changedChoice == "car") {
             wins[1] = wins[1] + 1
         }
     }
     // single decimal percentage
-    wins = wins.map( w => Math.trunc( 1000 * (w / rounds)) / 10 )
+    wins = wins.map(w => Math.trunc(1000 * (w / rounds)) / 10)
+    gameChosen = gameChosen.map(v => v / rounds)
+    console.log("Game chosen stats:", gameChosen)
+    let err = Math.abs(gameChosen.reduce((error, value) => error + (value - 1 / 3), 0))
+    t.assert(err < 0.1, `Game Chosen bias ${err} should be small (<0.1)`)
     console.log(`After ${rounds} trials, Winning staying ${wins[0]}%  Winning switching ${wins[1]}%`)
 
-    t.assert( wins[0] < wins[1], "Monty Hall Problem solved, for 3 doors. Switch doors!")
+    t.assert(wins[0] < wins[1], "Monty Hall Problem solved, for 3 doors. Switch doors!")
     t.end()
 })
