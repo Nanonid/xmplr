@@ -1,4 +1,5 @@
 # xmplr -- Exemplar -- Statistical object generator
+[![Build Status](https://travis-ci.org/Nanonid/xmplr.svg?branch=master)](https://travis-ci.org/Nanonid/xmplr)
 
 This library creates "Exemplars" or statistical object generator for defining and creating an arbitrary object where each attribute conforms to a statistical distribution.
 
