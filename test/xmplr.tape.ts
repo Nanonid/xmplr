@@ -249,6 +249,35 @@ test("Example Single Customer", (t) => {
     t.end()
 })
 
+
+test("Example Single Customer Custom Model", (t) => {
+    let personModel = {
+        first: new xFirstNames(),
+        last: new xLastNames(),
+        age: new xAdultAges(),
+        location: {
+            zips: new xZipCodes(),
+            next(){
+                let loc = this.zips.next()
+                return [ loc.Lat , loc.Lon ]
+            }
+        }
+                
+    }
+
+    let xPerson = new xObject(personModel,true)
+    let person = xPerson.next()
+    console.log(person)
+
+    t.assert( typeof person.first === "string", "has first" )
+    t.assert( typeof person.last === "string", "has last" )
+    t.assert( typeof person.age === "number", "has age" )
+    t.assert( Array.isArray(person.location), "location is array")
+    t.is( person.location.length, 2, "location has 2 entries")
+    t.end()
+})
+
+
 async function arrivals(t:test.Test){
     let personModel = {
         first: new xFirstNames(),

@@ -156,42 +156,19 @@ export function range(startOrStop: number, stop?: number, step?: number): number
  * If val in (-inf,ar[0]] first interval (0)
  * if val in (ar[0],ar[1]] second interval (1)
  * if val > ar[n-1] return n
- * @param ar 
- * @param val 
+ * @param array
+ * @param value
  */
-export function findFirst(ar: number[], val: number): number {
-    var start = 1
-    var end = ar.length - 1
-    var cmp = val - ar[0]
-    var cur = start
-    cmp = val - ar[0]
-    // in interval -inf < val <= ar[0]
-    if (cmp <= 0) {
-        return 0
+export function findFirst(array: number[], value: number): number {
+    var low = 0,
+        high = array.length;
+
+    while (low < high) {
+        var mid = low + high >>> 1;
+        if (array[mid] < value) low = mid + 1;
+        else high = mid;
     }
-    // in interval ar[end] < val < inf
-    if (val > ar[end]) {
-        return ar.length
-    }
-    while (start < end) {
-        cur = (start + end) >> 1
-        cmp = val - ar[cur]
-        if (cmp > 0) {
-            start = cur + 1
-        } else if (cmp < 0) {
-            end = cur - 1
-        } else {
-            return cur
-        }
-    }
-    cur = (start + end) >> 1
-    if (val <= ar[cur - 1]) {
-        return cur - 1
-    }
-    if (val <= ar[cur]) {
-        return cur
-    }
-    return cur + 1
+    return low;
 }
 
 export class xIndex implements IModel {
@@ -258,13 +235,41 @@ export class xIndex implements IModel {
     }
 }
 
+export type Generator = () => any
+export function asModel(gen: Generator): IModel {
+    return {
+        next: () => gen()
+    }
+}
+export type ModelGenerator = IModel | Generator
+
 export class xObject implements IModel {
-    constructor(public model: { [id: string]: IModel }) {
+    model: { [id: string]: IModel }
+    flat: boolean
+    constructor(model: { [id: string]: ModelGenerator }, flat = false) {
+        this.model = {} as { [id: string]: IModel }
+        Object.keys(model).forEach((key) => {
+            let gen = model[key]
+            if (typeof gen === "function") {
+                this.model[key] = asModel(model[key] as Generator)
+            } else {
+                this.model[key] = model[key] as IModel
+            }
+        })
+        this.flat = flat
     }
 
     next() {
         let result: any = {}
-        Object.keys(this.model).forEach((key) => result[key] = this.model[key].next())
+        Object.keys(this.model).forEach((key) => {
+            let model = this.model[key]
+            let res = model.next()
+            if (this.flat && typeof res === "object" && !Array.isArray(res)) {
+                Object.assign(result, res)
+            } else {
+                result[key] = res
+            }
+        })
         return result
     }
 }
@@ -273,14 +278,14 @@ export class xObject implements IModel {
  * index contains states that are comma seperated assigned to **fields**.
  */
 export class xCSVObject extends xIndex {
-    constructor(public list:xList, public fields:string[], public dist:IRandom = new xNormRand() ){
-        super(list,dist)
+    constructor(public list: xList, public fields: string[], public dist: IRandom = new xNormRand()) {
+        super(list, dist)
     }
     next() {
         let result: any = {}
         let states: string[] = super.next().split(",")
-        let cnt = Math.min(states.length,this.fields.length)
-        for( let i = 0; i < cnt; i++ ){
+        let cnt = Math.min(states.length, this.fields.length)
+        for (let i = 0; i < cnt; i++) {
             result[this.fields[i]] = states[i].trim()
         }
         return result
@@ -323,9 +328,9 @@ export class xFullNames implements IModel {
 }
 
 export class xZipCodes extends xCSVObject {
-    constructor(public f: any = path.resolve(__dirname + "/../" + ZIP_CODES_CSV) as string, public fields:string[] = ["Zip","Lat","Lon"]) {
-        super(new xList(readArray(f, 1)),fields)
-    }    
+    constructor(public f: any = path.resolve(__dirname + "/../" + ZIP_CODES_CSV) as string, public fields: string[] = ["Zip", "Lat", "Lon"]) {
+        super(new xList(readArray(f, 1)), fields)
+    }
 }
 
 export class xDates extends xInterval {
@@ -361,27 +366,27 @@ export class xTendRecentDates extends xDates {
  * Contains internal millisecond clock that will be used as period if not provided.
  */
 export class xRateModel implements IModel {
-    lastTime :number = new Date().getTime()
+    lastTime: number = new Date().getTime()
     lastDeltaMSec: number = 0
     lastCount: number = 0
-    constructor(public model:IModel, public ratePerMSec:xRateRand, public minimum:number = 0 ){
+    constructor(public model: IModel, public ratePerMSec: xRateRand, public minimum: number = 0) {
     }
-    start(){
+    start() {
         this.lastTime = new Date().getTime()
     }
-    next() : any[] {
+    next(): any[] {
         return this.nextPeriod(new Date().getTime() - this.lastTime)
     }
-    nextPeriod(deltaMSec:number) : any[] {
+    nextPeriod(deltaMSec: number): any[] {
         this.lastDeltaMSec = deltaMSec
         this.lastTime += deltaMSec
         const arrivals = Math.trunc(this.ratePerMSec.nextPeriod(deltaMSec)) + this.minimum
         let result = []
-        for( let cnt = 0; cnt < arrivals; cnt++ ){
-            result.push( this.model.next() )
+        for (let cnt = 0; cnt < arrivals; cnt++) {
+            result.push(this.model.next())
         }
         this.lastCount = result.length
-        return result    
+        return result
     }
 }
 /**
